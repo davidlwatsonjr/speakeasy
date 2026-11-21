@@ -1,8 +1,10 @@
 import { morseMap } from '../data/courses';
 let context: AudioContext | undefined;
 const playing = new Set<OscillatorNode>();
+let playbackGeneration = 0;
 /** Cancel scheduled playback before another prompt or when audio is switched off. */
 export function stopMorse(): void {
+  playbackGeneration++;
   for (const oscillator of playing) {
     try { oscillator.stop(); } catch { /* already stopped */ }
   }
@@ -11,9 +13,13 @@ export function stopMorse(): void {
 /** International Morse timing: dit = 1, dah = 3, element gap = 1, letter gap = 3, word gap = 7. */
 export async function playMorse(message: string, wpm = 18): Promise<void> {
   stopMorse();
+  const generation = playbackGeneration;
   if (typeof window === 'undefined' || !window.AudioContext) return;
   context ??= new window.AudioContext();
-  if (context.state === 'suspended') await context.resume();
+  if (context.state === 'suspended') {
+    try { await context.resume(); } catch { return; }
+  }
+  if (generation !== playbackGeneration) return;
   const unit = 1.2 / wpm;
   let at = context.currentTime + 0.04;
   const words = message.toUpperCase().trim().split(/\s+/).filter(Boolean);

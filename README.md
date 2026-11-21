@@ -6,7 +6,7 @@
 
 - **Study:** Flip cards, reverse front/back, save favorites, self-rate, track mastery.
 - **Test:** Letters or words; symbol-to-text and text-to-symbol; 10 questions, 60-second sprint, or 3-minute session. Words read from symbols are typed; reverse questions offer four choices. Results include accuracy, mean response time, correct answers/minute, and correct characters/minute.
-- **Type:** Convert text to handshape, Braille, or Morse displays. Morse code and Braille Unicode can also be decoded; Morse decode mode includes a dot/dash keypad. Optional Morse audio in all three modes uses browser Web Audio (no API).
+- **Type:** Convert text to handshape, Braille, or Morse displays. Morse code and Braille Unicode can also be decoded; Morse decode mode includes a dot/dash keypad. Optional Morse audio is available across ASL, Braille and Morse in Study, Test and Type. The shared toggle is saved locally; Study plays the current card (with Replay), Test plays an optional clue, and Type has on-demand playback of the source or decoded text. Browser Web Audio generates the tones offline.
 - Saved progress, favorites, audio preference, and last 50 test sessions remain in localStorage, with a compatible local progress key. No account or data collection.
 
 ## Notes

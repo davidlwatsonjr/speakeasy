@@ -27,7 +27,11 @@ function SymbolSequence({ course, text, mini = false }: { course: CourseId; text
 }
 
 function App() {
-  const [prefs, setPrefs] = useState(readPreferences);
+  const [prefs, setPrefs] = useState(() => {
+    const saved = readPreferences();
+    const selected = new URLSearchParams(window.location.search).get('course');
+    return selected === 'asl' || selected === 'braille' || selected === 'morse' ? {...saved, course: selected} : saved;
+  });
   const [mode, setMode] = useState<Mode>('study');
   const [filter, setFilter] = useState<DeckFilter>('letters');
   const [reverse, setReverse] = useState(false);
@@ -169,7 +173,7 @@ function App() {
     setQuestions(generated); setQuestionIndex(0); setAnswer(null); setTypedAnswer('');
     setAttempts([]); beganAt.current = Date.now(); questionAt.current = Date.now();
     saveCompleted.current = false; endedAt.current = 0; setRemaining(length === '10' ? 0 : Number(length)); setPhase('running');
-    if (course.id === 'morse' && prefs.audioEnabled && generated[0]) void playMorse(generated[0].answer);
+    if (prefs.audioEnabled && generated[0]) void playMorse(generated[0].answer);
   }
   function submitAnswer(choice: string) {
     if (!active || answer !== null || phase !== 'running') return;
@@ -189,13 +193,13 @@ function App() {
     const next = questions[questionIndex + 1];
     setQuestionIndex(v => v + 1); setAnswer(null); setTypedAnswer('');
     questionAt.current = Date.now();
-    if (course.id === 'morse' && prefs.audioEnabled) void playMorse(next.answer);
+    if (prefs.audioEnabled) void playMorse(next.answer);
   }
   function updateAudio() {
     setPrefs(p => ({...p, audioEnabled: !p.audioEnabled}));
     if (prefs.audioEnabled) stopMorse();
-    else if (course.id === 'morse') {
-      const message = mode === 'test' && active ? active.answer : mode === 'study' ? current?.label : input;
+    else {
+      const message = mode === 'test' && phase === 'running' ? active?.answer : mode === 'study' ? current?.label : mode === 'type' ? (typeReverse ? output : input) : undefined;
       if (message) void playMorse(message);
     }
   }
@@ -208,10 +212,10 @@ function App() {
     catch { setCopied(false); }
   }
   useEffect(() => {
-    if (course.id !== 'morse' || !prefs.audioEnabled || mode !== 'study' || !current) return;
-    if (reverse === revealed) void playMorse(current.label);
+    if (!prefs.audioEnabled || mode !== 'study' || !current) return;
+    void playMorse(current.label);
     return () => stopMorse();
-  }, [course.id, current?.id, mode, prefs.audioEnabled, revealed, reverse]);
+  }, [course.id, current?.id, mode, prefs.audioEnabled]);
 
   return <div className="app">
     <header className="app-header">
@@ -228,9 +232,9 @@ function App() {
     </nav>
     <main className="stage">
       <div className="stage-head">
-        <div className="stage-title"><strong>{mode === 'study' ? 'Flashcards' : mode === 'test' ? 'Test your recall' : 'Free-form typing'}</strong><small>{course.id === 'asl' ? 'ASL fingerspelling' : course.id === 'braille' ? 'Uncontracted Braille' : 'International Morse'}</small></div>
-        {course.id === 'morse' && <button className={prefs.audioEnabled ? 'sound-toggle on' : 'sound-toggle'} aria-pressed={prefs.audioEnabled} onClick={updateAudio} title={prefs.audioEnabled ? 'Mute Morse playback' : 'Enable Morse audio'}>
-          {prefs.audioEnabled ? <Volume2 size={17}/> : <VolumeX size={17}/>} Audio {prefs.audioEnabled ? 'on' : 'off'}
+        <div className="stage-title"><h1>{mode === 'study' ? 'Flashcards' : mode === 'test' ? 'Test your recall' : 'Free-form typing'}</h1><small>{course.id === 'asl' ? 'ASL fingerspelling' : course.id === 'braille' ? 'Uncontracted Braille' : 'International Morse'}</small></div>
+        {<button className={prefs.audioEnabled ? 'sound-toggle on' : 'sound-toggle'} aria-pressed={prefs.audioEnabled} onClick={updateAudio} title={prefs.audioEnabled ? 'Mute Morse playback' : 'Enable Morse audio in any course'}>
+          {prefs.audioEnabled ? <Volume2 size={17}/> : <VolumeX size={17}/>} Morse {prefs.audioEnabled ? 'on' : 'off'}
         </button>}
       </div>
 
@@ -242,6 +246,7 @@ function App() {
           </select><ChevronDown size={14}/></label>
           <button className="small-tool" onClick={() => {setReverse(v => !v); setRevealed(false);}} aria-pressed={reverse}><RotateCcw size={15}/> Reverse</button>
           <button className="small-tool" onClick={() => {setRandomDeck(v => !v); setDeckIndex(0); setRevealed(false);}} aria-pressed={randomDeck}><Shuffle size={15}/> {randomDeck ? 'Mixed' : 'Order'}</button>
+          {prefs.audioEnabled && current && <button className="small-tool study-replay" aria-label="Replay Morse" title="Replay Morse" onClick={() => void playMorse(current.label)}><Volume2 size={16}/></button>}
         </div>
         {current ? <>
           <div className="progress-line"><span>{deckIndex % deck.length + 1} of {deck.length}</span><span>{reverse ? 'Character → symbol' : 'Symbol → character'}</span></div>
@@ -279,7 +284,7 @@ function App() {
             ? (unit === 'letter' ? <SymbolVisual key={active.answer} course={course.id} card={cardsFor(course.id,active.answer)[0]}/> : <SymbolSequence course={course.id} text={active.answer}/>)
             : <span className="large-character word">{active.answer}</span>}
           </div>
-          {course.id === 'morse' && prefs.audioEnabled && <button className="replay" onClick={() => void playMorse(active.answer)}><Volume2 size={16}/> Replay</button>}
+          {prefs.audioEnabled && <button className="replay" onClick={() => void playMorse(active.answer)}><Volume2 size={16}/> Replay</button>}
         </div>
         {unit === 'word' && direction === 'decode' ? <form className="word-entry" onSubmit={e => {e.preventDefault(); submitAnswer(typedAnswer);}}>
           <input aria-label="Type the word" placeholder="Type the word…" autoCapitalize="characters" autoComplete="off" spellCheck={false} disabled={answer !== null} value={typedAnswer} onChange={e => setTypedAnswer(e.target.value.toUpperCase().replace(/[^A-Z]/g,''))} maxLength={12}/>
@@ -292,7 +297,7 @@ function App() {
         </div>}
         <div className="test-bottom">
           {answer !== null ? <><span aria-live="polite" className={testCorrect ? 'feedback right' : 'feedback wrong'}>{testCorrect ? 'Correct!' : `Answer: ${active.answer}`}</span><button className="primary-action" onClick={() => {if (length === '10' && questionIndex + 1 >= 10) finishTest(); else nextQuestion();}}>Next <ArrowRight size={17}/></button></>
-            : <><span className="subtle">First answer counts toward your grade.</span><button className="text-action" onClick={finishTest}>End test</button></>}
+            : <><span className="subtle">{prefs.audioEnabled ? 'Morse audio is an optional clue.' : 'First answer counts toward your grade.'}</span><button className="text-action" onClick={finishTest}>End test</button></>}
         </div>
       </>}
 
@@ -326,7 +331,7 @@ function App() {
         </div>}
         <div className="type-output">
           <div className="output-header"><strong>{typeReverse ? 'DECODED TEXT' : 'OUTPUT'}</strong><div className="output-buttons">
-            {course.id === 'morse' && prefs.audioEnabled && !typeReverse && <button onClick={() => void playMorse(input)}><Volume2 size={16}/> Play</button>}
+            {prefs.audioEnabled && <button onClick={() => void playMorse(typeReverse ? output : input)}><Volume2 size={16}/> Play Morse</button>}
             <button onClick={() => void copyOutput()}><Copy size={16}/>{copied ? 'Copied' : 'Copy'}</button></div></div>
           <div className="type-output-content">{typeReverse ? <div className="decoded-text">{output || '…'}</div> : course.id === 'morse'
             ? <div className="morse-text">{output.replaceAll('.', '·').replaceAll('-', '−')}</div>
@@ -348,6 +353,11 @@ function App() {
       <p><strong>{totalMastered} mastered</strong> in {course.name} · {pastSessions.length} saved tests</p>
       {latest && <p>Most recent: {latest.unit}, {latest.direction} · {latest.metrics.accuracy}% accuracy · {latest.metrics.averageSeconds}s average.</p>}
       <p className="small-print">ASL covers fingerspelling, not ASL grammar or vocabulary. Braille is a visual introduction and does not replace tactile reading. Test word lists omit moving ASL letters J and Z.</p>
+      <nav className="learning-links" aria-label="Learning guides">
+        <a href="/learn/asl.html">ASL alphabet guide</a>
+        <a href="/learn/braille.html">Braille alphabet guide</a>
+        <a href="/learn/morse.html">Morse code guide</a>
+      </nav>
       <button className="danger-button" onClick={clearData}>Delete saved progress</button>
     </section></div>}
   </div>;
