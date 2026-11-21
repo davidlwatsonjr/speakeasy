@@ -27,7 +27,7 @@ function SymbolSequence({ course, text, mini = false }: { course: CourseId; text
 }
 
 function App() {
-  const [prefs, setPrefs] = useState(() => {
+  const [prefs, setPrefs] = useState<ReturnType<typeof readPreferences>>(() => {
     const saved = readPreferences();
     const selected = new URLSearchParams(window.location.search).get('course');
     return selected === 'asl' || selected === 'braille' || selected === 'morse' ? {...saved, course: selected} : saved;
