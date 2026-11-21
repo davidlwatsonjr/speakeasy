@@ -133,6 +133,10 @@ async function offlineGet(path, mode) {
 await offlineGet('/', 'navigate');
 await offlineGet('/index.html', 'navigate');
 assert.equal((await offlineGet('/?course=braille', 'navigate')).path, '/index.html');
+for (const query of ['?course=asl&mode=study&card=J', '?course=morse&mode=test&unit=word&direction=decode&length=60', '?course=braille&mode=type&direction=decode', '?course=morse&mode=study&card=%2F']) {
+  assert.equal((await offlineGet('/' + query, 'navigate')).path, '/index.html');
+}
+for (const shortcut of manifest.shortcuts) assert.equal((await offlineGet(shortcut.url, 'navigate')).path, '/index.html');
 for (const id of ['asl','braille','morse']) {
   const page = '/learn/' + id + '.html';
   assert.equal((await offlineGet(page, 'navigate')).path, page, 'Guide must not resolve to the app shell');

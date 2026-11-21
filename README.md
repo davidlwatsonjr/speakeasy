@@ -52,3 +52,14 @@ CI runs unit tests, compiles the app, precaches the complete site, and simulates
 ## Discoverability and SEO
 
 The root page has static introductory content, a canonical URL, social metadata and WebApplication structured data. Three standalone, crawlable reference guides under `public/learn/` link to the corresponding interactive course and are included in the offline cache. `public/robots.txt` and `public/sitemap.xml` expose the four canonical URLs. The app reads the optional `?course=asl|braille|morse` parameter to open a course directly. Query variants use the homepage canonical. Submit the sitemap in Google Search Console after verifying the site; review indexing, search queries and Core Web Vitals periodically. No analytics or external runtime dependencies are added.
+
+## Deep links
+
+Use root query parameters rather than path-based client routes, so GitHub Pages and the offline service worker both serve the same app for direct visits.
+
+- `/?course=asl&mode=study&card=J` opens the J flashcard.
+- `/?course=braille&mode=study&filter=numbers&card=3&reverse=1` opens a reversed number card.
+- `/?course=morse&mode=test&unit=word&direction=decode&length=60` preconfigures a 60-second word test. The learner must press Start.
+- `/?course=braille&mode=type&direction=decode` opens the Braille decoder.
+
+The URL follows course, mode, and public study card or test configuration. Browser Back/Forward restores course and mode entries; changes within a mode replace the current URL. The link icon copies the active view. Favorites and review filters refer only to each device's own deck, and their current cards are never serialized. Typed messages, audio preferences, quiz attempts, and progress stay local. Unknown or unsupported parameters fall back safely. Installed-app shortcuts open each course where supported. The guide reference charts link directly to individual cards. Query variants retain the homepage canonical for SEO.

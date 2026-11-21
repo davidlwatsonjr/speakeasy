@@ -2,16 +2,14 @@ import '@fontsource-variable/dm-sans/wght.css';
 import '@fontsource-variable/outfit/wght.css';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Clock3, Copy, Delete, Hand, Keyboard, RotateCcw, Settings2, Shuffle, Star, Trophy, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Clock3, Copy, Delete, Hand, Keyboard, Link2, RotateCcw, Settings2, Shuffle, Star, Trophy, Volume2, VolumeX, X } from 'lucide-react';
 import { BrailleCell, SymbolVisual } from './components/SymbolVisual';
-import { brailleFor, courseById, courses, translateText, unicodeBraille, type CourseId, type Group } from './data/courses';
+import { brailleFor, courseById, courses, translateText, unicodeBraille, type CourseId } from './data/courses';
 import { calculateMetrics, cardsFor, decodeBraille, decodeMorse, generateQuestions, matchesAnswer, shuffle, type Attempt, type Question, type TestDirection, type TestLength, type TestUnit } from './lib/practice';
 import { playMorse, stopMorse } from './lib/audio';
 import { addSession, initialPreferences, rateCard, readPreferences, storageKey } from './lib/storage';
+import { cardIndex, formatDeepLink, parseDeepLink, type Mode, type DeckFilter } from './lib/deepLink';
 import './style.css';
-
-type Mode = 'study' | 'test' | 'type';
-type DeckFilter = 'letters' | Group | 'all' | 'starred' | 'review';
 type Phase = 'ready' | 'running' | 'finished';
 
 function SymbolSequence({ course, text, mini = false }: { course: CourseId; text: string; mini?: boolean }) {
@@ -27,20 +25,20 @@ function SymbolSequence({ course, text, mini = false }: { course: CourseId; text
 }
 
 function App() {
-  const [prefs, setPrefs] = useState<ReturnType<typeof readPreferences>>(() => {
+  const [initial] = useState(() => {
     const saved = readPreferences();
-    const selected = new URLSearchParams(window.location.search).get('course');
-    return selected === 'asl' || selected === 'braille' || selected === 'morse' ? {...saved, course: selected} : saved;
+    return {saved, route: parseDeepLink(window.location.search, saved.course)};
   });
-  const [mode, setMode] = useState<Mode>('study');
-  const [filter, setFilter] = useState<DeckFilter>('letters');
-  const [reverse, setReverse] = useState(false);
+  const [prefs, setPrefs] = useState<ReturnType<typeof readPreferences>>(() => ({...initial.saved, course:initial.route.course}));
+  const [mode, setMode] = useState<Mode>(initial.route.mode);
+  const [filter, setFilter] = useState<DeckFilter>(initial.route.filter);
+  const [reverse, setReverse] = useState(initial.route.reverse);
   const [randomDeck, setRandomDeck] = useState(false);
-  const [deckIndex, setDeckIndex] = useState(0);
+  const [deckIndex, setDeckIndex] = useState(cardIndex(initial.route));
   const [revealed, setRevealed] = useState(false);
-  const [unit, setUnit] = useState<TestUnit>('letter');
-  const [direction, setDirection] = useState<TestDirection>('decode');
-  const [length, setLength] = useState<TestLength>('10');
+  const [unit, setUnit] = useState<TestUnit>(initial.route.unit);
+  const [direction, setDirection] = useState<TestDirection>(initial.route.direction);
+  const [length, setLength] = useState<TestLength>(initial.route.length);
   const [phase, setPhase] = useState<Phase>('ready');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -48,10 +46,11 @@ function App() {
   const [typedAnswer, setTypedAnswer] = useState('');
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [remaining, setRemaining] = useState(60);
-  const [input, setInput] = useState('HELLO WORLD');
-  const [typeReverse, setTypeReverse] = useState(false);
+  const [input, setInput] = useState(initial.route.typeReverse ? '' : 'HELLO WORLD');
+  const [typeReverse, setTypeReverse] = useState(initial.route.typeReverse);
   const [brailleDots, setBrailleDots] = useState<number[]>([]);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [settings, setSettings] = useState(false);
   const [offlineStatus, setOfflineStatus] = useState<'preparing' | 'ready' | 'unavailable'>('preparing');
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
@@ -79,9 +78,33 @@ function App() {
   const testCorrect = active && answer !== null && matchesAnswer(answer, active.answer);
   const output = typeReverse ? (course.id === 'morse' ? decodeMorse(input) : decodeBraille(input)) : translateText(course.id, input);
   const answerOptions = active?.options ?? [];
+  const deepLink = formatDeepLink({course: course.id, mode, filter, card: current?.label, reverse, unit, direction, length, typeReverse});
 
   useEffect(() => { try { localStorage.setItem(storageKey, JSON.stringify(prefs)); } catch { /* private browsing */ } }, [prefs]);
   useEffect(() => () => stopMorse(), []);
+  // Course/mode changes are browser history entries; card advancement and
+  // configuration changes update the current entry instead of flooding Back.
+  useEffect(() => {
+    if (window.location.search === deepLink) return;
+    const previous = parseDeepLink(window.location.search, course.id);
+    const url = window.location.pathname + deepLink;
+    if (previous.course !== course.id || previous.mode !== mode) window.history.pushState(null, '', url);
+    else window.history.replaceState(null, '', url);
+  }, [deepLink, course.id, mode]);
+  useEffect(() => {
+    const restoreLink = () => {
+      const route = parseDeepLink(window.location.search, readPreferences().course);
+      resetTest();
+      setPrefs(p => ({...p, course: route.course}));
+      setMode(route.mode); setFilter(route.filter); setReverse(route.reverse);
+      setRandomDeck(false); setDeckIndex(cardIndex(route)); setRevealed(false);
+      setUnit(route.unit); setDirection(route.direction); setLength(route.length);
+      setTypeReverse(route.typeReverse); setInput(route.typeReverse ? '' : 'HELLO WORLD');
+      setBrailleDots([]); setSettings(false);
+    };
+    window.addEventListener('popstate', restoreLink);
+    return () => window.removeEventListener('popstate', restoreLink);
+  }, []);
   useEffect(() => {
     const updateConnection = () => setIsOnline(navigator.onLine);
     window.addEventListener('online', updateConnection);
@@ -207,6 +230,16 @@ function App() {
     if (!window.confirm('Delete local study progress, favorites, and test history on this device?')) return;
     setPrefs({...initialPreferences, course: prefs.course}); resetTest(); setSettings(false);
   }
+  async function shareCurrentView() {
+    const url = new URL(deepLink, window.location.origin + '/').href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 1500);
+    } catch {
+      window.prompt('Copy this SpeakEasy link:', url);
+    }
+  }
   async function copyOutput() {
     try { await navigator.clipboard.writeText(output); setCopied(true); window.setTimeout(() => setCopied(false), 1200); }
     catch { setCopied(false); }
@@ -220,7 +253,7 @@ function App() {
   return <div className="app">
     <header className="app-header">
       <div className="identity"><img src="/icons/icon-192.png" alt="" /><div><strong>Speak<em>Easy</em></strong><small>Learn a new way to communicate</small></div></div>
-      <div className="header-right"><span className="mastered"><Trophy size={15}/> {totalMastered}/{cards.length}</span><button className="icon-button" onClick={() => setSettings(true)} aria-label="Settings"><Settings2 size={19}/></button></div>
+      <div className="header-right"><span className="mastered"><Trophy size={15}/> {totalMastered}/{cards.length}</span><button className="icon-button" onClick={() => void shareCurrentView()} aria-label={linkCopied ? 'Link copied' : 'Copy link to current view'} title={linkCopied ? 'Link copied' : 'Copy link to current view'}>{linkCopied ? <Check size={19}/> : <Link2 size={19}/>}</button><button className="icon-button" onClick={() => setSettings(true)} aria-label="Settings"><Settings2 size={19}/></button></div>
     </header>
     <nav className="course-tabs" aria-label="Select language">
       {courses.map(c => <button key={c.id} aria-pressed={c.id === course.id} className={c.id === course.id ? 'active' : ''} onClick={() => switchCourse(c.id)}>
@@ -353,6 +386,7 @@ function App() {
       <p><strong>{totalMastered} mastered</strong> in {course.name} · {pastSessions.length} saved tests</p>
       {latest && <p>Most recent: {latest.unit}, {latest.direction} · {latest.metrics.accuracy}% accuracy · {latest.metrics.averageSeconds}s average.</p>}
       <p className="small-print">ASL covers fingerspelling, not ASL grammar or vocabulary. Braille is a visual introduction and does not replace tactile reading. Test word lists omit moving ASL letters J and Z.</p>
+      <button className="secondary-action" onClick={() => void shareCurrentView()}><Link2 size={16}/> {linkCopied ? 'Link copied' : 'Copy link to current view'}</button>
       <nav className="learning-links" aria-label="Learning guides">
         <a href="/learn/asl.html">ASL alphabet guide</a>
         <a href="/learn/braille.html">Braille alphabet guide</a>
