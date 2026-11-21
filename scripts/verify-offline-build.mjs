@@ -39,7 +39,15 @@ assert.match(styles, /DM Sans Variable/, 'DM Sans must be bundled locally');
 assert.match(styles, /Outfit Variable/, 'Outfit must be bundled locally');
 assert.doesNotMatch(styles, /@import\s+url\(['"]?https?:/i, 'CSS must not load remote stylesheets');
 assert.doesNotMatch(styles, /url\(['"]?https?:/i, 'CSS must not load remote assets');
-assert.doesNotMatch(html, /(?:src|href)=["'](?:https?:)?\/\//i, 'HTML must not load remote assets');
+for (const file of files.filter(path => path.endsWith('.html'))) {
+  const page = readFileSync(join(ROOT, file), 'utf8');
+  assert.doesNotMatch(page, /<(?:script|img|iframe)\b[^>]*(?:src)=["'](?:https?:)?\/\//i, 'HTML must not load remote assets');
+  assert.doesNotMatch(page, /<link\b[^>]*rel=["']stylesheet["'][^>]*href=["'](?:https?:)?\/\//i, 'HTML must not load remote stylesheets');
+  assert.match(page, /<link rel="canonical" href="https:\/\/speakeasy\.davidlwatsonjr\.com\//, 'HTML needs a canonical URL');
+  assert.match(page, /<h1>/, 'Each indexable page needs a pre-rendered heading');
+}
+for (const id of ['asl','braille','morse']) assert.ok(available.has('/learn/' + id + '.html'));
+assert.ok(available.has('/robots.txt') && available.has('/sitemap.xml'));
 
 const listeners = new Map();
 const allCaches = new Map();
@@ -120,9 +128,15 @@ async function offlineGet(path, mode) {
   const response = await responsePromise;
   assert.ok(response.ok, `Failed airplane-mode fetch for ${path}`);
   await Promise.all(background);
+  return response;
 }
 await offlineGet('/', 'navigate');
 await offlineGet('/index.html', 'navigate');
+assert.equal((await offlineGet('/?course=braille', 'navigate')).path, '/index.html');
+for (const id of ['asl','braille','morse']) {
+  const page = '/learn/' + id + '.html';
+  assert.equal((await offlineGet(page, 'navigate')).path, page, 'Guide must not resolve to the app shell');
+}
 await offlineGet('/manifest.webmanifest', 'same-origin');
 await offlineGet('/icons/icon-192.png', 'same-origin');
 await offlineGet('/icons/maskable-512.png', 'same-origin');

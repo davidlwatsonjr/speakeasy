@@ -18,6 +18,7 @@ if (!files.includes('index.html') || !files.includes('manifest.webmanifest'))
 
 const urls = files.map(path => '/' + path.split('/').map(encodeURIComponent).join('/'));
 const hash = createHash('sha256');
+hash.update(readFileSync(join(root, 'sw.js')));
 for (const path of files) {
   hash.update(path);
   hash.update(readFileSync(join(root, path)));

@@ -31,21 +31,17 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
-    // Prefer the latest page online, but always render our precached app shell
-    // on airplane mode, including for home-screen standalone launches.
+    // Each published HTML page has its own cache entry. Never overwrite the
+    // app shell with a guide or a newer build's HTML; the service worker
+    // update installs a coherent revision of the entire site.
+    const path = new URL(request.url).pathname;
+    const key = path === '/' ? FALLBACK_PAGE : path;
     event.respondWith((async () => {
-      try {
-        const response = await fetch(request);
-        if (response.ok) {
-          const copy = response.clone();
-          event.waitUntil(caches.open(CACHE_NAME)
-            .then(cache => cache.put(FALLBACK_PAGE, copy)).catch(() => {}));
-        }
-        return response;
-      } catch {
-        return (await caches.match(FALLBACK_PAGE)) ||
-          new Response('SpeakEasy is not cached on this device yet.', {status: 503});
-      }
+      const cache = await caches.open(CACHE_NAME);
+      const cached = await cache.match(key);
+      if (cached) return cached;
+      try { return await fetch(request); }
+      catch { return new Response('This page is not available offline.', {status: 503}); }
     })());
     return;
   }

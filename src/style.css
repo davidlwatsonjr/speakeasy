@@ -23,3 +23,5 @@
 @media(max-height:670px){.braille-keypad button{height:27px;padding:2px 6px}.morse-keypad button{padding:5px 7px}}
 
 .stage-title h1{margin:0}.study-replay{padding:0 7px}.learning-links{display:flex;flex-wrap:wrap;gap:9px}.learning-links a{color:#8de8dc;font-size:12px}.modal{max-height:90dvh;overflow-y:auto}
+
+.footer-guide{color:#8de8dc;text-decoration:underline;font-size:10px;white-space:nowrap}

@@ -347,7 +347,7 @@ function App() {
       offlineStatus === 'ready' ? (isOnline ? 'Saved for offline use' : 'Offline mode · ready')
       : offlineStatus === 'preparing' ? 'Preparing offline files…'
       : 'Offline files unavailable · reconnect to install'
-    } · Progress saved on this device</span>{latest && <span>{pastSessions.length} tests logged</span>}</footer>
+    } · Progress saved on this device</span><a href="/learn/asl.html" className="footer-guide">Guides</a>{latest && <span>{pastSessions.length} tests logged</span>}</footer>
     {settings && <div className="modal-backdrop" onMouseDown={e => {if(e.target === e.currentTarget) setSettings(false);}}><section className="modal" role="dialog" aria-modal="true" aria-label="Settings"><div className="modal-top"><h2>Settings & progress</h2><button className="icon-button" onClick={() => setSettings(false)} aria-label="Close"><X size={18}/></button></div>
       <p>All learning data is saved locally. No account or backend is required.</p>
       <p><strong>{totalMastered} mastered</strong> in {course.name} · {pastSessions.length} saved tests</p>

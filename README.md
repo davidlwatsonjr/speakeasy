@@ -48,3 +48,7 @@ SpeakEasy is a static progressive web app. Every feature (Study, Test, Type, loc
 - External links and app updates require internet. The application itself makes no requests to third-party services during use.
 
 CI runs unit tests, compiles the app, precaches the complete site, and simulates an offline service-worker launch. A missing file, remote CSS dependency, or offline loading failure fails the production build.
+
+## Discoverability and SEO
+
+The root page has static introductory content, a canonical URL, social metadata and WebApplication structured data. Three standalone, crawlable reference guides under `public/learn/` link to the corresponding interactive course and are included in the offline cache. `public/robots.txt` and `public/sitemap.xml` expose the four canonical URLs. The app reads the optional `?course=asl|braille|morse` parameter to open a course directly. Query variants use the homepage canonical. Submit the sitemap in Google Search Console after verifying the site; review indexing, search queries and Core Web Vitals periodically. No analytics or external runtime dependencies are added.
