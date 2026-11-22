@@ -8,9 +8,11 @@ let browser;
 try {
   for(let i=0;i<80;i++){try{if((await fetch(ORIGIN)).ok)break;}catch{}if(i===79)throw new Error('Preview server not ready');await new Promise(r=>setTimeout(r,250));}
   browser=await chromium.launch({headless:true});
-  const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:'block'});
+  const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
+  const page=await context.newPage();
   const issues=[];
   async function audit(label){
+    console.log('Auditing '+label);
     const report=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']).analyze();
     for(const v of report.violations)issues.push({view:label,id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))});
   }
