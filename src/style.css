@@ -25,3 +25,37 @@
 .stage-title h1{margin:0}.study-replay{padding:0 7px}.learning-links{display:flex;flex-wrap:wrap;gap:9px}.learning-links a{color:#8de8dc;font-size:12px}.modal{max-height:90dvh;overflow-y:auto}
 
 .footer-guide{color:#8de8dc;text-decoration:underline;font-size:10px;white-space:nowrap}
+
+/* Keyboard, contrast, touch and reflow improvements */
+.sr-only,.skip-link:not(:focus){position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.skip-link:focus{position:fixed;z-index:100;top:8px;left:8px;background:#fff;color:#091522;padding:12px;border-radius:6px}
+:focus-visible{outline:3px solid #a6fff0!important;outline-offset:3px}
+.select-control:focus-within{outline:3px solid #a6fff0;outline-offset:2px}
+.learning-panel{display:flex;flex-direction:column;flex:1;min-height:0;gap:inherit}
+.stage,.app{overflow:visible}
+.stage{overflow-y:auto}
+.stage-head{flex-shrink:0}
+.course-tabs button,.mode-tabs button,.icon-button,.small-tool,.sound-toggle,.select-control,.test-config select,.study-card,.square-action,.options button,.word-entry input,.stage textarea,.braille-keypad button,.morse-keypad button{border-color:#92aec5}
+.braille-dot{border-color:#a3bbce}.braille-dot.filled{border-color:#ffdc92}
+.course-tabs button.active,.mode-tabs button.active,.segmented button.active,.small-tool[aria-pressed=true],.sound-toggle.on,.braille-keypad button[aria-pressed=true]{box-shadow:inset 0 -3px currentColor;font-weight:800}
+.icon-button,.square-action{min-width:44px;min-height:44px}
+.course-tabs button,.mode-tabs button,.primary-action,.secondary-action,.small-tool,.sound-toggle,.select-control,.test-config select,.replay,.text-action,.segmented button,.morse-keypad button,.braille-keypad button,.output-buttons button,.danger-button{min-height:44px}
+.braille-keypad button,.morse-keypad button{min-width:44px;height:auto}.study-actions{flex-basis:auto;min-height:44px}
+.tools-row{flex-basis:auto;min-height:44px;flex-wrap:wrap;gap:5px}
+.select-control select{min-height:40px}.course-tabs,.mode-tabs{flex-basis:auto;min-height:44px}
+.app-header{flex-basis:auto;min-height:44px;display:flex}.header-right{gap:5px}
+.stage-title small,.card-caption,.progress-line,.type-hint,.subtle,.small-print,.result-grid small,.app-footer{font-size:.75rem}
+.study-card-content,.question-display{min-height:84px}.study-card{min-height:150px;overflow:visible}.card-caption.bottom{max-height:none;overflow:visible}
+.question-prompt{min-height:110px;overflow:visible}.question-display{overflow:visible}
+.options button{max-height:none;overflow:visible}.sequence{flex-wrap:wrap;overflow:visible}
+.type-output{min-height:105px}.type-output-content{min-height:48px}.output-header,.header-right,.result-actions,.test-bottom{flex-wrap:wrap}
+.modal:not([open]){display:none}.modal[open]{display:grid;position:fixed;inset:0;margin:auto;max-height:90dvh;overflow:auto;box-sizing:border-box}.modal::backdrop{background:#07101bcc}
+.accessibility-settings{display:grid;gap:10px;border:1px solid #92aec5;border-radius:9px;padding:12px;min-width:0}.accessibility-settings legend{font-weight:700;color:#fff}.setting-check{display:flex;align-items:center;gap:10px;min-height:44px}.setting-check input{width:24px;height:24px;accent-color:#7ce5d7}.accessibility-settings input[type=range]{width:100%;min-height:44px;accent-color:#7ce5d7}
+.enhanced-contrast,.enhanced-contrast .stage,.enhanced-contrast .study-card,.enhanced-contrast .question-prompt,.enhanced-contrast .type-output,.enhanced-contrast .modal,.enhanced-contrast button:not(.primary-action),.enhanced-contrast select,.enhanced-contrast textarea,.enhanced-contrast input:not([type=range]):not([type=checkbox]){background:#000;color:#fff;border-color:#fff}
+.enhanced-contrast .stage *:not(svg):not(path):not(.primary-action):not(.braille-dot):not(.dot):not(.dash):not(.correct):not(.incorrect){color:inherit}
+.enhanced-contrast .primary-action{background:#fff;color:#000}.enhanced-contrast .braille-cell{background:#000;border-color:#fff}.enhanced-contrast .braille-dot{background:#000;border-color:#fff}.enhanced-contrast .braille-dot.filled{background:#fff}.enhanced-contrast .morse-marks .dot,.enhanced-contrast .morse-marks .dash{background:#fff}
+.large-controls{height:auto;min-height:100dvh}.large-controls .stage{overflow:visible}.large-controls button,.large-controls select,.large-controls label,.large-controls small,.large-controls p,.large-controls .progress-line,.large-controls .card-caption,.large-controls .type-hint,.large-controls .app-footer{font-size:1rem;white-space:normal}.large-controls button,.large-controls select{min-height:48px}.large-controls .study-card-content,.large-controls .question-display{min-height:170px}.large-controls .study-card{min-height:240px}
+.reduced-motion *,.reduced-motion *::before,.reduced-motion *::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+@media(max-height:740px),(max-width:380px){.app{height:auto;min-height:100dvh}.stage{overflow:visible}.app-header{display:flex}.app-footer{display:flex;flex-wrap:wrap}.type-hint{display:block}.study-card{min-height:190px}.question-prompt{min-height:130px}.identity small{display:none}.mastered{font-size:.7rem}.stage-head{flex-basis:auto}.stage-title h1{font-size:1rem}.study-actions{flex-wrap:wrap}.test-config{grid-template-columns:repeat(auto-fit,minmax(90px,1fr))}.learning-panel{min-height:0}.app{padding-inline:8px}.stage{padding:8px}.header-right{gap:4px}.identity img{width:28px;height:28px}.identity strong{font-size:18px}}
+@media(max-width:340px){.header-right .mastered{display:none}.course-tabs button,.mode-tabs button{font-size:.75rem;gap:3px}.course-tabs button svg,.mode-tabs button svg{width:14px}.options{grid-template-columns:repeat(2,minmax(0,1fr))}.study-actions .square-action{flex-basis:44px}.result-grid{grid-template-columns:repeat(auto-fit,minmax(80px,1fr))}.type-toolbar{flex-wrap:wrap}}
+@media(forced-colors:active){button,select,input,textarea,.braille-cell,.braille-dot{border:1px solid ButtonText!important}.braille-dot.filled,.morse-marks .dot,.morse-marks .dash{forced-color-adjust:none;background:CanvasText!important}.braille-dot{background:Canvas!important}.braille-dot.filled{background:CanvasText!important}.active,[aria-pressed=true],[aria-selected=true]{outline:2px solid Highlight!important}.primary-action{border:2px solid ButtonText!important}}

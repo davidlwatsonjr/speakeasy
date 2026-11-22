@@ -11,7 +11,7 @@ export function stopMorse(): void {
   playing.clear();
 }
 /** International Morse timing: dit = 1, dah = 3, element gap = 1, letter gap = 3, word gap = 7. */
-export async function playMorse(message: string, wpm = 18): Promise<void> {
+export async function playMorse(message: string, wpm = 18, volume = 100): Promise<void> {
   stopMorse();
   const generation = playbackGeneration;
   if (typeof window === 'undefined' || !window.AudioContext) return;
@@ -20,7 +20,9 @@ export async function playMorse(message: string, wpm = 18): Promise<void> {
     try { await context.resume(); } catch { return; }
   }
   if (generation !== playbackGeneration) return;
-  const unit = 1.2 / wpm;
+  const unit = 1.2 / Math.max(5,Math.min(30,wpm));
+  const amplitude = 0.13 * Math.max(0,Math.min(100,volume)) / 100;
+  if (!amplitude) return;
   let at = context.currentTime + 0.04;
   const words = message.toUpperCase().trim().split(/\s+/).filter(Boolean);
   words.forEach((word, wordIndex) => {
@@ -33,8 +35,8 @@ export async function playMorse(message: string, wpm = 18): Promise<void> {
         const gain = context!.createGain();
         oscillator.type = 'sine'; oscillator.frequency.value = 650;
         gain.gain.setValueAtTime(0, at);
-        gain.gain.linearRampToValueAtTime(0.13, at + 0.005);
-        gain.gain.setValueAtTime(0.13, at + Math.max(0.006, duration - 0.005));
+        gain.gain.linearRampToValueAtTime(amplitude, at + 0.005);
+        gain.gain.setValueAtTime(amplitude, at + Math.max(0.006, duration - 0.005));
         gain.gain.linearRampToValueAtTime(0, at + duration);
         oscillator.connect(gain); gain.connect(context!.destination);
         oscillator.onended = () => { playing.delete(oscillator); gain.disconnect(); oscillator.disconnect(); };

@@ -63,3 +63,7 @@ Use root query parameters rather than path-based client routes, so GitHub Pages 
 - `/?course=braille&mode=type&direction=decode` opens the Braille decoder.
 
 The URL follows course, mode, and public study card or test configuration. Browser Back/Forward restores course and mode entries; changes within a mode replace the current URL. The link icon copies the active view. Favorites and review filters refer only to each device's own deck, and their current cards are never serialized. Typed messages, audio preferences, quiz attempts, and progress stay local. Unknown or unsupported parameters fall back safely. Installed-app shortcuts open each course where supported. The guide reference charts link directly to individual cards. Query variants retain the homepage canonical for SEO.
+
+## Accessibility
+
+The app targets WCAG 2.2 AA. Keyboard-accessible tabs, native modal focus containment, non-color answer feedback, readable symbol descriptions, responsive reflow and local accessibility preferences are supported. Timed tests are optional; a 10-question untimed session and accuracy-only display are available. Morse speed and volume are adjustable offline. Automated checks do not by themselves establish WCAG conformance; manual screen-reader, zoom and assistive-technology testing remain necessary. ASL descriptions are supplementary to visual handshapes; Braille is visual or dot-position instruction, not tactile instruction.
