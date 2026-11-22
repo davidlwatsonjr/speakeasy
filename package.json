@@ -7,7 +7,9 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build && node scripts/inject-sw-assets.mjs && node scripts/verify-offline-build.mjs",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint:a11y": "eslint src/main.tsx src/components/SymbolVisual.tsx",
+    "test:a11y": "node scripts/a11y-browser.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -21,6 +23,11 @@
     "@types/react-dom": "^19.1.0",
     "typescript": "~5.8.3",
     "vite": "^6.3.0",
-    "vitest": "^3.2.0"
+    "vitest": "^3.2.0",
+    "playwright": "^1.51.1",
+    "@axe-core/playwright": "^4.10.2",
+    "eslint": "^9.22.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "@typescript-eslint/parser": "^8.26.0"
   }
 }

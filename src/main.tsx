@@ -60,6 +60,7 @@ function App() {
   const resultRef = useRef<HTMLDivElement>(null);
   const studyRef = useRef<HTMLButtonElement>(null);
   const [notice, setNotice] = useState('');
+  const startRef = useRef<HTMLButtonElement>(null);
   const [offlineStatus, setOfflineStatus] = useState<'preparing' | 'ready' | 'unavailable'>('preparing');
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const beganAt = useRef(0);
@@ -184,13 +185,13 @@ function App() {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (settings && !dialog.open) dialog.showModal();
-    if (!settings && dialog.open) { dialog.close(); settingsTrigger.current?.focus(); }
+    if (!settings && dialog.open) { stopMorse(); dialog.close(); settingsTrigger.current?.focus(); }
   }, [settings]);
   useEffect(() => {
     if (mode !== 'test' || settings) return;
     if (phase === 'running') { if (answer !== null) nextRef.current?.focus(); else promptRef.current?.focus(); }
     if (phase === 'finished') resultRef.current?.focus();
-  }, [mode, phase, questionIndex, answer, settings]);
+  }, [mode, phase, questionIndex, answer]);
   function finishTest() { if (endedAt.current) return; endedAt.current = Date.now(); setPhase('finished'); }
   function resetTest() {
     stopMorse(); setPhase('ready'); setQuestions([]); setAnswer(null); setTypedAnswer('');
@@ -283,7 +284,7 @@ function App() {
     <span className="sr-only" role="status">{notice}</span>
     <header className="app-header">
       <div className="identity"><img src="/icons/icon-192.png" alt="" /><div><strong>Speak<em>Easy</em></strong><small>Learn a new way to communicate</small></div></div>
-      <div className="header-right"><span className="mastered" aria-label={`${totalMastered} of ${cards.length} cards mastered`}><Trophy size={15}/> {totalMastered}/{cards.length}</span><button className="icon-button" onClick={() => void shareCurrentView()} aria-label={linkCopied ? 'Link copied' : 'Copy link to current view'} title={linkCopied ? 'Link copied' : 'Copy link to current view'}>{linkCopied ? <Check size={19}/> : <Link2 size={19}/>}</button><button ref={settingsTrigger} className="icon-button" onClick={() => setSettings(true)} aria-label="Settings" aria-haspopup="dialog"><Settings2 size={19}/></button></div>
+      <div className="header-right"><span className="mastered" role="img" aria-label={`${totalMastered} of ${cards.length} cards mastered`}><Trophy size={15}/> {totalMastered}/{cards.length}</span><button className="icon-button" onClick={() => void shareCurrentView()} aria-label={linkCopied ? 'Link copied' : 'Copy link to current view'} title={linkCopied ? 'Link copied' : 'Copy link to current view'}>{linkCopied ? <Check size={19}/> : <Link2 size={19}/>}</button><button ref={settingsTrigger} className="icon-button" onClick={() => setSettings(true)} aria-label="Settings" aria-haspopup="dialog"><Settings2 size={19}/></button></div>
     </header>
     <nav className="course-tabs" aria-label="Select language">
       {courses.map(c => <button key={c.id} aria-pressed={c.id === course.id} className={c.id === course.id ? 'active' : ''} onClick={() => switchCourse(c.id)}>
@@ -309,7 +310,7 @@ function App() {
 
       {mode === 'study' && <>
         <div className="tools-row">
-          <label className="select-control"><select aria-label="Study set" value={filter} onChange={e => switchFilter(e.target.value as DeckFilter)}>
+          <label className="select-control"><span className="sr-only">Study set</span><select aria-label="Study set" value={filter} onChange={e => switchFilter(e.target.value as DeckFilter)}>
             <option value="letters">A–Z</option>{course.id !== 'asl' && <option value="numbers">Numbers</option>}{course.id === 'morse' && <option value="punctuation">Punctuation</option>}
             <option value="all">All symbols</option><option value="starred">Favorites</option><option value="review">Review</option>
           </select><ChevronDown size={14}/></label>
@@ -340,13 +341,13 @@ function App() {
           <label>Session<select disabled={a11y.untimed} value={effectiveLength} onChange={e => setLength(e.target.value as TestLength)}><option value="10">10 questions (untimed)</option><option value="60">60 seconds</option><option value="180">3 minutes</option></select></label>
         </div>
         <div className="ready-hero"><Clock3 size={38}/><h2>Ready when you are.</h2><p>{unit === 'letter' ? 'Match individual characters.' : 'Read or recognize complete words.'} {direction === 'decode' ? 'Identify what the symbols mean.' : 'Choose the correct symbols.'}</p></div>
-        {latest && <p className="prior-score">Last {latest.unit} test · {latest.metrics.accuracy}% accuracy · {latest.metrics.correctPerMinute} correct/min</p>}
-        <button className="primary-action full" onClick={beginTest}>Start test <ArrowRight size={18}/></button>
+        {latest && <p className="prior-score">Last {latest.unit} test · {latest.metrics.accuracy}% accuracy{!a11y.accuracyOnly && ` · ${latest.metrics.correctPerMinute} correct/min`}</p>}
+        <button ref={startRef} className="primary-action full" onClick={beginTest}>Start test <ArrowRight size={18}/></button>
       </>}
 
       {mode === 'test' && phase === 'running' && active && <>
-        <div className="progress-line"><span>{unit === 'letter' ? 'LETTER' : 'WORD'} · {questionIndex + 1} answered after this question</span><span>{effectiveLength === '10' ? `${attempts.length}/10` : `${remaining}s`}</span></div>
-        <div className="meter"><span style={{width: `${effectiveLength === '10' ? attempts.length * 10 : (Number(effectiveLength) - remaining)/Number(effectiveLength)*100}%`}}/></div>
+        <div className="progress-line"><span>{unit === 'letter' ? 'LETTER' : 'WORD'} · Question {questionIndex + 1}</span><span>{effectiveLength === '10' ? `${attempts.length}/10` : `${remaining}s`}</span></div>
+        <div className="meter" aria-hidden="true"><span style={{width: `${effectiveLength === '10' ? attempts.length * 10 : (Number(effectiveLength) - remaining)/Number(effectiveLength)*100}%`}}/></div>
         <div className="question-prompt" ref={promptRef} tabIndex={-1} role="group" aria-label={`Question ${questionIndex + 1}: ${direction === 'decode' ? describeSequence(course.id,active.answer) : active.answer}. ${direction === 'decode' ? 'Identify the symbols' : 'Choose matching symbols'}`}>
           <small>{direction === 'decode' ? 'WHAT DOES THIS SAY?' : 'WHICH SYMBOLS MATCH?'}</small>
           <div className="question-display">{direction === 'decode'
@@ -358,7 +359,7 @@ function App() {
         {unit === 'word' && direction === 'decode' ? <form className="word-entry" onSubmit={e => {e.preventDefault(); submitAnswer(typedAnswer);}}>
           <input aria-label="Type the word" placeholder="Type the word…" autoCapitalize="characters" autoComplete="off" spellCheck={false} disabled={answer !== null} value={typedAnswer} onChange={e => setTypedAnswer(e.target.value.toUpperCase().replace(/[^A-Z]/g,''))} maxLength={12}/>
           {answer === null && <button type="submit" className="primary-action" disabled={!typedAnswer.trim()}>Check</button>}
-        </form> : <div className={unit === 'letter' ? 'options' : 'options word-options'}>
+        </form> : <div className={unit === 'letter' ? 'options' : 'options word-options'} role="group" aria-label="Answer choices" onKeyDown={e=>{if(/^[1-4]$/.test(e.key)&&answer===null){e.preventDefault();const choice=answerOptions[Number(e.key)-1];if(choice)submitAnswer(choice);}}}>
           {answerOptions.map((choice,index) => <button key={choice} aria-label={`Option ${index+1}: ${direction === 'encode' ? describeSequence(course.id,choice) : choice}${answer !== null ? choice === active.answer ? ', correct' : choice === answer ? ', incorrect' : '' : ''}`} disabled={answer !== null} onClick={() => submitAnswer(choice)} className={answer !== null && choice === active.answer ? 'correct' : answer === choice ? 'incorrect' : ''}>
             {direction === 'encode' ? <SymbolSequence course={course.id} text={choice} mini={unit === 'word'}/> : choice}
             {answer !== null && choice === active.answer && <Check size={16}/>} {answer === choice && choice !== active.answer && <X size={16}/>}
@@ -374,7 +375,7 @@ function App() {
         <div className="result-hero" ref={resultRef} tabIndex={-1} role="group" aria-label={`Test complete. ${metrics.accuracy} percent accuracy. ${metrics.correct} correct of ${metrics.answered}.`}><Trophy size={40}/><h2>{metrics.accuracy}%</h2><p>{metrics.correct} correct out of {metrics.answered}</p></div>
         {!a11y.accuracyOnly && <div className="result-grid"><div><strong>{metrics.averageSeconds}s</strong><small>avg / answer</small></div><div><strong>{metrics.correctPerMinute}</strong><small>correct / min</small></div><div><strong>{metrics.charactersPerMinute}</strong><small>characters / min</small></div></div>}
         <p className="result-note">Results are saved on this device. {a11y.accuracyOnly ? 'Accuracy includes mistakes.' : 'Speed measures correct answers per elapsed minute; accuracy includes mistakes.'}</p>
-        <div className="result-actions"><button className="secondary-action" onClick={() => setPhase('ready')}>Change settings</button><button className="primary-action" onClick={beginTest}>Try again <ArrowRight size={18}/></button></div>
+        <div className="result-actions"><button className="secondary-action" onClick={() => {setPhase('ready');requestAnimationFrame(()=>startRef.current?.focus());}}>Change settings</button><button className="primary-action" onClick={beginTest}>Try again <ArrowRight size={18}/></button></div>
       </>}
 
       {mode === 'type' && <>
@@ -421,7 +422,7 @@ function App() {
     <dialog ref={dialogRef} className="modal" aria-labelledby="settings-title" onCancel={e => {e.preventDefault();setSettings(false);}} onClick={e => {if(e.target === e.currentTarget) {const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)setSettings(false);}}}><div className="modal-top"><h2 id="settings-title">Settings & progress</h2><button className="icon-button" onClick={() => setSettings(false)} aria-label="Close"><X size={18}/></button></div>
       <p>All learning data is saved locally. No account or backend is required.</p>
       <p><strong>{totalMastered} mastered</strong> in {course.name} · {pastSessions.length} saved tests</p>
-      {latest && <p>Most recent: {latest.unit}, {latest.direction} · {latest.metrics.accuracy}% accuracy · {latest.metrics.averageSeconds}s average.</p>}
+      {latest && <p>Most recent: {latest.unit}, {latest.direction} · {latest.metrics.accuracy}% accuracy{!a11y.accuracyOnly && ` · ${latest.metrics.averageSeconds}s average`}.</p>}
       <p className="small-print">ASL covers fingerspelling, not ASL grammar or vocabulary. Braille is a visual introduction and does not replace tactile reading. Test word lists omit moving ASL letters J and Z.</p>
       <fieldset className="accessibility-settings"><legend>Accessibility</legend>
         {([['contrast','Enhanced contrast'],['large','Larger text and controls'],['reduceMotion','Reduce motion'],['untimed','Untimed tests only'],['accuracyOnly','Show accuracy only']] as const).map(([key,label]) => <label className="setting-check" key={key}><input type="checkbox" checked={a11y[key]} onChange={e=>updateAccessibility(key,e.target.checked)}/>{label}</label>)}

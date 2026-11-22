@@ -67,3 +67,5 @@ The URL follows course, mode, and public study card or test configuration. Brows
 ## Accessibility
 
 The app targets WCAG 2.2 AA. Keyboard-accessible tabs, native modal focus containment, non-color answer feedback, readable symbol descriptions, responsive reflow and local accessibility preferences are supported. Timed tests are optional; a 10-question untimed session and accuracy-only display are available. Morse speed and volume are adjustable offline. Automated checks do not by themselves establish WCAG conformance; manual screen-reader, zoom and assistive-technology testing remain necessary. ASL descriptions are supplementary to visual handshapes; Braille is visual or dot-position instruction, not tactile instruction.
+
+Run `npm run lint:a11y` for static JSX accessibility checks. After `npm run build` and `npx playwright install chromium`, run `npm run test:a11y` for axe WCAG 2.2 AA checks, keyboard tab and question focus tests, settings dismissal and persistence, and 320 CSS-pixel reflow. Both checks gate Pages deployments.
