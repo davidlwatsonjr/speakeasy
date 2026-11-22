@@ -21,6 +21,18 @@ try {
       await page.goto(ORIGIN+'/?course='+course+'&mode='+mode);
       await page.getByRole('tab',{name:mode[0].toUpperCase()+mode.slice(1),exact:true}).waitFor();
       await audit(course+'/'+mode);
+      if(mode==='study'){
+        const card=page.locator('button.study-card');
+        assert.ok(await card.getByText('TAP TO REVEAL',{exact:true}).isVisible());
+        await page.getByRole('button',{name:/tap to reveal/i}).click();
+        assert.ok(await card.getByText('ANSWER',{exact:true}).isVisible());
+        await audit(course+'/study-revealed');
+        await page.getByRole('button',{name:'Reverse',exact:true}).click();
+        assert.ok(await card.getByText('TAP TO REVEAL',{exact:true}).isVisible());
+        await audit(course+'/study-reversed');
+        await card.click();
+        await audit(course+'/study-reversed-revealed');
+      }
     }
     await page.goto(ORIGIN+'/?course='+course+'&mode=test&direction=encode');
     await page.getByRole('button',{name:'Start test'}).click();

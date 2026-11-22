@@ -9,7 +9,7 @@ import { calculateMetrics, cardsFor, decodeBraille, decodeMorse, generateQuestio
 import { playMorse, stopMorse } from './lib/audio';
 import { addSession, initialPreferences, rateCard, readPreferences, storageKey, type AccessibilityPreferences } from './lib/storage';
 import { cardIndex, formatDeepLink, parseDeepLink, type Mode, type DeckFilter } from './lib/deepLink';
-import { describeSymbol, describeSequence, describeMorsePattern } from './lib/accessibility';
+import { describeSequence, describeMorsePattern } from './lib/accessibility';
 import './style.css';
 type Phase = 'ready' | 'running' | 'finished';
 
@@ -320,7 +320,7 @@ function App() {
         </div>
         {current ? <>
           <div className="progress-line" aria-live="polite"><span>{deckIndex % deck.length + 1} of {deck.length}</span><span>{reverse ? 'Character → symbol' : 'Symbol → character'}</span></div>
-          <button ref={studyRef} className="study-card" onClick={() => setRevealed(v => !v)} onKeyDown={e => {if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {e.preventDefault();moveCard(e.key === 'ArrowLeft' ? -1 : 1);}}} aria-label={`${revealed ? 'Answer' : 'Question'}, ${(revealed !== reverse) ? current.label : describeSymbol(course.id,current.label)}. ${revealed ? 'Show question' : 'Reveal answer'}`}>
+          <button ref={studyRef} className="study-card" onClick={() => setRevealed(v => !v)} onKeyDown={e => {if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {e.preventDefault();moveCard(e.key === 'ArrowLeft' ? -1 : 1);}}}>
             <span className="card-caption">{revealed ? 'ANSWER' : 'TAP TO REVEAL'}</span>
             <div className="study-card-content">{(revealed !== reverse) ? <span className="large-character">{current.label}</span> : <SymbolVisual key={current.id} course={course.id} card={current} />}</div>
             <span className="card-caption bottom">{revealed ? (current.motion || 'Tap to return') : 'What does this represent?'}</span>
